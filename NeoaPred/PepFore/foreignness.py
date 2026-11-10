@@ -72,7 +72,7 @@ def foreignness_predicter(
                         batch_size = 4,
                       ):
     cache_data = preload(input_dir)
-    df = pd.read_csv(input_file, header=0)
+    df = pd.read_csv(input_file, header=0, dtype={"ID": str})
     out_for = output_dir + "/" + "foreignness_result.csv"
 
     model = Predict(device=device)

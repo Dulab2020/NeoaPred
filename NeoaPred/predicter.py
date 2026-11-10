@@ -40,7 +40,7 @@ def neoantigen_predicter(neo_input_file, output_dir, step, trained_model_1, trai
     data_list = []
 
     for idx, row in df.iterrows():
-        ID = row["ID"]
+        ID = str(row["ID"])
         if deal_single_pep:
             ID_pep = ID + "_pep"
         else:
