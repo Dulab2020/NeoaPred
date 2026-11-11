@@ -70,9 +70,13 @@ def foreignness_predicter(
                         pre_train_model,
                         device = "cpu",
                         batch_size = 4,
+                        input_df = None,
                       ):
     cache_data = preload(input_dir)
-    df = pd.read_csv(input_file, header=0, dtype={"ID": str})
+    if input_df is None:
+        df = pd.read_csv(input_file, header=0, dtype={"ID": str})
+    else:
+        df = input_df.copy()
     out_for = output_dir + "/" + "foreignness_result.csv"
 
     model = Predict(device=device)
@@ -88,4 +92,3 @@ def foreignness_predicter(
         data_pair_list.append([sam_ID, allele, seq_wt, seq_mut, score])
     df_pair = pd.DataFrame(data_pair_list, columns = ["ID", "Allele", "WT", "Mut", "Foreignness_Score"])
     df_pair.to_csv(output_file, index=False)
-

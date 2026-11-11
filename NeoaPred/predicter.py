@@ -6,6 +6,31 @@ from NeoaPred.PepConf.structure import structure_predicter
 from NeoaPred.Surface.surface import compute_surface
 from NeoaPred.PepFore.foreignness import foreignness_predicter
 
+
+def _filter_rows_without_templates(df, template_dir):
+    has_template = df["Allele"].map(
+        lambda allele: os.path.isfile(
+            os.path.join(template_dir, "HLA_{}.pdb".format(allele))
+        )
+    )
+    excluded = df.loc[~has_template, ["ID", "Allele"]]
+    if not excluded.empty:
+        print(
+            "Skipping {} input row(s) without matching HLA templates:".format(
+                len(excluded)
+            )
+        )
+        for _, row in excluded.iterrows():
+            print("  ID={!r}, Allele={!r}".format(row["ID"], row["Allele"]))
+
+    filtered = df.loc[has_template].copy()
+    if filtered.empty:
+        raise ValueError(
+            "No input rows have matching HLA templates in {}".format(template_dir)
+        )
+    return filtered
+
+
 def neoantigen_predicter(neo_input_file, output_dir, step, trained_model_1, trained_model_2):
     cons_init_pep = False
     pred_struc = False
@@ -22,7 +47,14 @@ def neoantigen_predicter(neo_input_file, output_dir, step, trained_model_1, trai
     
     deal_single_pep = False
 
-    df = pd.read_csv(neo_input_file, header=0)
+    df = pd.read_csv(neo_input_file, header=0, dtype={"ID": str})
+    template_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "PepConf",
+        "data",
+        "MHC_template_PDB",
+    )
+    df = _filter_rows_without_templates(df, template_dir)
     
     if('Pep' in df.columns):
         if pred_fore:
@@ -126,5 +158,5 @@ def neoantigen_predicter(neo_input_file, output_dir, step, trained_model_1, trai
                             output_dir = for_dir,
                             output_file = output_file,
                             pre_train_model = trained_model_2,
+                            input_df = df,
                           )
-
